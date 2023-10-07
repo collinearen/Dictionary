@@ -4,15 +4,15 @@ from tkinter import ttk
 
 
 class Dictionary:
-    db_name = 'dictionary.db'
+    db_name = 'dictionary_my.db'
 
     def __init__(self, window):
 
         self.wind = window
-        self.wind.title('Редактирование словаря')
+        self.wind.title('Словарь')
 
-        # создание элементов для ввода слов и значений
-        frame = LabelFrame(self.wind, text='Введите новое слово')
+        # creating elements for entering words and values
+        frame = LabelFrame(self.wind, text='Добавление слова')
         frame.grid(row=0, column=0, columnspan=3, pady=20)
         Label(frame, text='Слово: ').grid(row=1, column=0)
         self.word = Entry(frame)
@@ -24,29 +24,33 @@ class Dictionary:
         ttk.Button(frame, text='Сохранить', command=self.add_word).grid(row=3, columnspan=2, sticky=W + E)
         self.message = Label(text='', fg='green')
         self.message.grid(row=3, column=0, columnspan=2, sticky=W + E)
-        # таблица слов и значений
+        # table of words and their meanings
         self.tree = ttk.Treeview(height=10, columns=2)
         self.tree.grid(row=4, column=0, columnspan=2)
         self.tree.heading('#0', text='Слово', anchor=CENTER)
         self.tree.heading('#1', text='Значение', anchor=CENTER)
 
-        # кнопки редактирования записей
+        # post editing buttons
         ttk.Button(text='Удалить', command=self.delete_word).grid(row=5, column=0, sticky=W + E)
         ttk.Button(text='Изменить', command=self.edit_word).grid(row=5, column=1, sticky=W + E)
 
-        # заполнение таблицы
+        # filling out the table
         self.get_words()
 
-    # подключение и запрос к базе
     def run_query(self, query, parameters=()):
+        '''
+        :return: connecting and querying the database
+        '''
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             result = cursor.execute(query, parameters)
             conn.commit()
         return result
 
-    # заполнение таблицы словами и их значениями
     def get_words(self):
+        '''
+        :return: filling the table with words and their meanings
+        '''
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
@@ -55,25 +59,31 @@ class Dictionary:
         for row in db_rows:
             self.tree.insert('', 0, text=row[1], values=row[2])
 
-    # валидация ввода
     def validation(self):
+        '''
+        :return: input validation
+        '''
         return len(self.word.get()) != 0 and len(self.meaning.get()) != 0
 
-    # добавление нового слова
     def add_word(self):
+        '''
+        :return: adding a new word
+        '''
         if self.validation():
             query = 'INSERT INTO dictionary VALUES(NULL, ?, ?)'
             parameters = (self.word.get(), self.meaning.get())
             self.run_query(query, parameters)
-            self.message['text'] = 'слово {} добавлено в словарь'.format(self.word.get())
+            self.message['text'] = f'слово {self.word.get()} добавлено в словарь'
             self.word.delete(0, END)
             self.meaning.delete(0, END)
         else:
             self.message['text'] = 'введите слово и значение'
         self.get_words()
 
-    # удаление слова
     def delete_word(self):
+        '''
+        :return: deleting a word
+        '''
         self.message['text'] = ''
         try:
             self.tree.item(self.tree.selection())['text'][0]
@@ -84,11 +94,13 @@ class Dictionary:
         word = self.tree.item(self.tree.selection())['text']
         query = 'DELETE FROM dictionary WHERE word = ?'
         self.run_query(query, (word,))
-        self.message['text'] = 'Слово {} успешно удалено'.format(word)
+        self.message['text'] = f'Слово {format(word)} успешно удалено'
         self.get_words()
 
-    # рeдактирование слова и/или значения
     def edit_word(self):
+        '''
+        :return: editing a word or meaning
+        '''
         self.message['text'] = ''
         try:
             self.tree.item(self.tree.selection())['values'][0]
@@ -124,8 +136,10 @@ class Dictionary:
                                                                                                              sticky=W)
         self.edit_wind.mainloop()
 
-    # внесение изменений в базу
     def edit_records(self, new_word, word, new_meaning, old_meaning):
+        '''
+        :return: making changes to the database
+        '''
         query = 'UPDATE dictionary SET word = ?, meaning = ? WHERE word = ? AND meaning = ?'
         parameters = (new_word, new_meaning, word, old_meaning)
         self.run_query(query, parameters)

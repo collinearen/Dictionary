@@ -1,11 +1,8 @@
+import os
 import random
 import sqlite3
 from tkinter import *
 from tkinter import ttk, messagebox
-
-
-
-window = Tk()
 
 
 class Match:
@@ -13,9 +10,8 @@ class Match:
 
     def __init__(self, window):
 
-        self.window = window
-        self.root = Tk()
-        self.window.title('Учим слова')
+        self.wind = window
+        self.wind.title('Учим слова')
         self.eng, self.trans = str(), str()
         self.message = Label(text='', fg='red')
         self.message.grid(row=1, column=0, columnspan=2, sticky=W + E)
@@ -29,14 +25,14 @@ class Match:
         # назначение команд кнопкам программы и х-кнопке окна
         ttk.Button(text="Начать сначала", command=self.restart_program).grid(row=4, column=1, sticky=W + E)
         ttk.Button(text="Редактировать", command=self.run_edit).grid(row=4, column=0, sticky=W + E)
-        self.window.protocol("WM_DELETE_WINDOW", self.on_exit)
-        # заполняем колонки словами  
+        self.wind.protocol("WM_DELETE_WINDOW", self.on_exit)
+        # заполняем колонки словами
         self.get_words()
 
     #  закрытие программы по клику на кнопке х
     def on_exit(self):
         if messagebox.askyesno("Выйти", "Закрыть программу?"):
-            self.window.destroy()
+            self.wind.destroy()
 
     #  подключение к базе и передача запроса
     def run_query(self, query, parameters=()):
@@ -79,7 +75,7 @@ class Match:
             record = cursor.fetchone()
             self.trans = record[2]
 
-    # обработка клика в правой колонке  
+    # обработка клика в правой колонке
     def callback_right(self, event1):
         self.message['text'] = ''
         if not event1.widget.curselection():
@@ -99,11 +95,7 @@ class Match:
 
     # загружаем окно и скрипт редактирования словаря
     def run_edit(self):
-        global window
-        window.destroy()
-        window = Tk()
-        application = Dictionary(window)
-        window.mainloop()
+        os.system('edit_dictionary.py')
 
     # перезапуск программы
     def restart_program(self):
@@ -111,3 +103,10 @@ class Match:
         self.left.delete(0, END)
         self.right.delete(0, END)
         self.get_words()
+
+
+if __name__ == '__main__':
+    window = Tk()
+    window.geometry('250x245+350+200')
+    application = Match(window)
+    window.mainloop()
